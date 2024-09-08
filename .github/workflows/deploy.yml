@@ -20,7 +20,7 @@ jobs:
            - name: Install dependencies
              run: npm install
              
-           - name: Run deployment
+           - name: Run build
              run: npm run build
 
            - name: Get SSH key and set permissions
@@ -28,9 +28,13 @@ jobs:
                mkdir -p ~/.ssh
                echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
                ssh-keyscan -H 3.97.12.52  >> ~/.ssh/known_hosts
+            
+           - name: Stop existing process (if any)
+             run: ssh -i ~/.ssh/id_rsa ec2-user@3.97.12.52 "pm2 stop github-actions-demo-project || true"   
              
            - name: Deploy to server using SSH
-             run: ssh -i ~/.ssh/id_rsa ec2-user@3.97.12.52 "cd /home/ec2-user/github-actions-demo-project && git pull origin main && npm install && npm run start"
+             run: ssh -i ~/.ssh/id_rsa ec2-user@3.97.12.52 "cd /home/ec2-user/github-actions-demo-project && git pull origin main && npm install && 
+               pm2 start npm --name 'github-actions-demo-project' -- start"
 
 
 
